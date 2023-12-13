@@ -1,0 +1,167 @@
+---
+- name: Setup vars
+  hosts: all
+  vars:
+    kube_owner: "mb"
+    kube_version: v1.29.0
+    dynamic_inventory_file: "./generate-inventory.sh"
+    security_ssh_port: 8888
+    kubespray_dest: "."
+    metrics_server_enabled: true
+    kubespray_version: v2.23.1
+
+- name: Determine SSH port
+  hosts: k8s_cluster
+  gather_facts: false
+  remote_user: "{{ kube_owner }}"
+  tasks:
+    - name: "Check port {{ security_ssh_port }}"
+      ansible.builtin.wait_for:
+        port: "{{ security_ssh_port }}"
+        state: "started"
+        host: "{{ inventory_hostname }}"
+        connect_timeout: "5"
+        timeout: "5"
+      delegate_to: "localhost"
+      ignore_errors: true
+      register: ssh_port
+
+    - name: Set SSH port to security_ssh_port
+      ansible.builtin.set_fact:
+        ansible_port: "{{ security_ssh_port }}"
+      when: ssh_port.state is defined
+
+    - name: "Check port 22"
+      ansible.builtin.wait_for:
+        port: "22"
+        state: "started"
+        host: "{{ inventory_hostname }}"
+        connect_timeout: "5"
+        timeout: "5"
+      delegate_to: "localhost"
+      ignore_errors: true
+      register: ssh_port_default
+      when:
+        - ssh_port is defined
+        - ssh_port.state is undefined
+
+    - name: Set SSH port to 22
+      ansible.builtin.set_fact:
+        ansible_port: "22"
+      when: ssh_port_default.state is defined
+
+- name: Prepare Kubernetes Cluster pods
+  hosts: k8s_cluster
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Add line to sudoers file
+      ansible.builtin.lineinfile:
+        dest: /etc/sudoers
+        line: "{{ kube_owner }} ALL=(ALL) NOPASSWD:ALL"
+        validate: "visudo -cf %s"
+      become: true
+
+    - name: Update and upgrade packages
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: true
+
+    - name: Install Security role on each machine
+      ansible.builtin.include_role:
+        name: geerlingguy.security
+
+- name: Install and Configure Kubernetes Cluster
+  hosts: localhost
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Download kubespray repository
+      ansible.builtin.git:
+        repo: https://github.com/kubernetes-sigs/kubespray.git
+        dest: "{{ kubespray_dest }}"
+        version: "{{ kubespray_version }}"
+
+    - name: Change ssh port to security_ssh_port
+      ansible.builtin.set_fact:
+        ansible_port: "{{ security_ssh_port }}"
+
+    - name: Run kubespray playbook
+      ansible.builtin.command: |
+        ansible-playbook -i {{ dynamic_inventory_file }} --become --become-user=root {{ kubespray_dest }}/kubespray/cluster.yml
+      changed_when: false
+
+    - name: Delete kubespray playbook
+      become: true
+      ansible.builtin.file:
+        path: "{{ kubespray_dest }}/kubespray"
+        state: absent
+
+- name: Install and Configure kubectl
+  hosts: localhost
+  tasks:
+    - name: Determine OS and architecture
+      ansible.builtin.set_fact:
+        os: "{{ ansible_facts['os_family'] }}"
+        architecture: "{{ ansible_facts['architecture'] }}"
+
+    - name: Download and install kubectl for Linux
+      become: true
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kube_version }}/bin/linux/amd64/kubectl"
+        dest: "/usr/local/bin/"
+        mode: "0411"
+      when: os == "Debian" and architecture == "x86_64"
+
+    - name: Download and install kubectl for macOS on Intel chip
+      become: true
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kube_version }}/bin/darwin/amd64/kubectl"
+        dest: "/usr/local/bin/"
+        mode: "0411"
+      when: os == "Darwin" and architecture == "x86_64"
+
+    - name: Download and install kubectl for macOS on Apple silicon
+      become: true
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kube_version }}/bin/darwin/arm64/kubectl"
+        dest: "/usr/local/bin/"
+        mode: "0411"
+      when: os == "Darwin" and architecture == "aarch64"
+
+- name: Install and Configure kubectl
+  hosts: kube_control_plane[0]
+  tasks:
+    - name: Copy admin.conf to /tmp/config on the first kube_control_plane host
+      become: true
+      ansible.builtin.copy:
+        src: "/etc/kubernetes/admin.conf"
+        dest: "/tmp/config"
+        mode: "0644"
+      delegate_to: localhost
+
+
+- name: Install and Configure kubectl
+  hosts: localhost
+  tasks:
+    - name: Transfer /tmp/config
+      ansible.posix.synchronize:
+        src: "/tmp/config"
+        dest: "~/.kube"
+        mode: "push"
+      delegate_to: "{{ kube_owner }}@{{ groups['kube_control_plane'][0] }}"
+
+    - name: Validate kubectl configuration
+      ansible.builtin.command: "kubectl version --client && kubectl get nodes"
+      delegate_to: localhost
+      changed_when: false
+
+- name: Install and Configure kubectl
+  hosts: kube_control_plane[0]
+  tasks:
+    - name: Delete copied /tmp/config file on the first kube_control_plane host
+      become: true
+      ansible.builtin.file:
+        path: /tmp/config
+        state: absent
