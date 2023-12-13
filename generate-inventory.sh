@@ -33,28 +33,19 @@ fi
 arp_output=$(arp -a | grep -v incomplete)
 
 inventory_file="/tmp/k8s_inventory"
-echo "[k8s-cluster:children]" >> "$inventory_file"
-echo "kube_control_plane, kube_node" >> "$inventory_file"
-echo "" >> "$inventory_file"
-if $verbose; then
-    echo "Initialized a master inventory file"
-fi
 
-controlplane_file="/tmp/k8s_controlplanes"
-echo "[kube_control_plane]" >> "$controlplane_file"
+controlplane_nodes=()
+controlplane_node_ips=()
 controlplane_counter=0
-if $verbose; then
-    echo "Initialized a controlplane inventory file"
-fi
-
-workernode_file="/tmp/k8s_workernodes"
-echo "[kube_node]" >> "$workernode_file"
+workernodes=()
+workernode_ips=()
 workernode_counter=0
-if $verbose; then
-    echo "Initialized worker node inventory file"
-fi
+etcd_nodes=()
 
-# Process arp_output and generate inventory entries
+kube_ip_base="10.3.0."
+kube_ip=1
+
+# Process arp_output and generate array entries
 while read -r entry; do
     
     hostname=$(echo "$entry" | awk '{print $1}')
@@ -62,9 +53,12 @@ while read -r entry; do
 
     if [[ $hostname =~ k8sm ]]; then
         if $verbose; then
-            echo "Found $hostname at $ip, adding as controlplane-$controlplane_counter"
+            echo "Found $hostname at $ip, adding as controlplane-$controlplane_counter and as etcd host"
         fi
-        echo "controlplane-$controlplane_counter ansible_host=$ip" >> "$controlplane_file"
+        node="controlplane-$controlplane_counter"
+        controlplane_nodes+=("$node")
+        controlplane_node_ips+=("$ip")
+        etcd_nodes+=("$node")
         ((controlplane_counter++))
     fi
 
@@ -72,15 +66,51 @@ while read -r entry; do
         if $verbose; then
             echo "Found $hostname at $ip, adding as workernode-$workernode_counter"
         fi
-        echo "workernode-$workernode_counter ansible_host=$ip" >> "$workernode_file"
+        node="workernode-$workernode_counter"
+        workernodes+=("$node")
+        workernode_ips+=("$ip")
+        if [[ $hostname =~ etcd ]]; then
+            etcd_nodes+=("$node")
+        fi
         ((workernode_counter++))
     fi
 done <<< "$arp_output"
 
-cat "$controlplane_file" >> "$inventory_file"
+# Build inventory file with controlplane_nodes, etcdnodes and workernodes
+
+# Add ansible hosts
+for i in ${!controlplane_nodes[@]}; do
+    echo "${controlplane_nodes[$i]} ansible_host=${controlplane_node_ips[$i]} ip=$kube_ip_base$kube_ip" >> "$inventory_file"
+    ((kube_ip++))
+done
+
+for i in ${!workernodes[@]}; do
+    echo "${workernodes[$i]} ansible_host=${workernode_ips[$i]} ip=$kube_ip_base$kube_ip" >> "$inventory_file"
+    ((kube_ip++))
+done
+
+# Create ansible groups https://github.com/kubernetes-sigs/kubespray/blob/24632ae81beafbab9710718705d266536b1bf1ec/docs/ansible.md
 echo "" >> "$inventory_file"
-cat "$workernode_file" >> "$inventory_file"
+echo "[kube_control_plane]" >> "$inventory_file"
+for n in ${controlplane_nodes[@]}; do
+    echo "$n" >> "$inventory_file"
+done
+
 echo "" >> "$inventory_file"
+echo "[etcd]" >> "$inventory_file"
+for n in ${etcd_nodes[@]}; do
+    echo "$n" >> "$inventory_file"
+done
+
+echo "" >> "$inventory_file"
+echo "[kube_node]" >> "$inventory_file"
+for n in ${workernodes[@]}; do
+    echo "$n" >> "$inventory_file"
+done
+
+echo "" >> "$inventory_file"
+echo "[k8s-cluster:children]" >> "$inventory_file"
+echo "kube_control_plane, kube_node" >> "$inventory_file"
 
 if $verbose; then
     echo "Generated inventory file:"
@@ -98,5 +128,3 @@ if $target_file; then
 fi
 
 rm "$inventory_file"
-rm "$controlplane_file"
-rm "$workernode_file"
