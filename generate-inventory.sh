@@ -33,22 +33,22 @@ fi
 arp_output=$(arp -a | grep -v incomplete)
 
 inventory_file="/tmp/k8s_inventory"
-echo "[k8s_cluster:children]" >> "$inventory_file"
-echo "k8s_controlplane_nodes, k8s_worker_nodes" >> "$inventory_file"
+echo "[k8s-cluster:children]" >> "$inventory_file"
+echo "kube_control_plane, kube_node" >> "$inventory_file"
 echo "" >> "$inventory_file"
 if $verbose; then
     echo "Initialized a master inventory file"
 fi
 
 controlplane_file="/tmp/k8s_controlplanes"
-echo "[k8s_controlplane_nodes]" >> "$controlplane_file"
+echo "[kube_control_plane]" >> "$controlplane_file"
 controlplane_counter=0
 if $verbose; then
     echo "Initialized a controlplane inventory file"
 fi
 
 workernode_file="/tmp/k8s_workernodes"
-echo "[k8s_worker_nodes]" >> "$workernode_file"
+echo "[kube_node]" >> "$workernode_file"
 workernode_counter=0
 if $verbose; then
     echo "Initialized worker node inventory file"
@@ -60,7 +60,7 @@ while read -r entry; do
     hostname=$(echo "$entry" | awk '{print $1}')
     ip=$(echo "$entry" | awk '{print $2}' | tr -d '()')
 
-    if [[ $hostname =~ wyse ]]; then
+    if [[ $hostname =~ k8sm ]]; then
         if $verbose; then
             echo "Found $hostname at $ip, adding as controlplane-$controlplane_counter"
         fi
@@ -68,7 +68,7 @@ while read -r entry; do
         ((controlplane_counter++))
     fi
 
-    if [[ $hostname =~ pi.*k8s ]]; then
+    if [[ $hostname =~ k8sw ]]; then
         if $verbose; then
             echo "Found $hostname at $ip, adding as workernode-$workernode_counter"
         fi
