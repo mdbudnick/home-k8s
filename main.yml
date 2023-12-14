@@ -77,26 +77,8 @@
   become: true
   gather_facts: true
   tasks:
-    - name: Download kubespray repository
-      ansible.builtin.git:
-        repo: https://github.com/kubernetes-sigs/kubespray.git
-        dest: "{{ kubespray_dest }}"
-        version: "{{ kubespray_version }}"
-
-    - name: Change ssh port to security_ssh_port
-      ansible.builtin.set_fact:
-        ansible_port: "{{ security_ssh_port }}"
-
-    - name: Run kubespray playbook
-      ansible.builtin.command: |
-        ansible-playbook -i {{ dynamic_inventory_file }} --become --become-user=root {{ kubespray_dest }}/kubespray/cluster.yml
-      changed_when: false
-
-    - name: Delete kubespray playbook
-      become: true
-      ansible.builtin.file:
-        path: "{{ kubespray_dest }}/kubespray"
-        state: absent
+    - name: Import kubespray playbook
+      ansible.builtin.import_playbook: ./kubespray/cluster.yml
 
 - name: Install and Configure kubectl
   hosts: localhost
@@ -140,7 +122,6 @@
         dest: "/tmp/config"
         mode: "0644"
       delegate_to: localhost
-
 
 - name: Install and Configure kubectl
   hosts: localhost
