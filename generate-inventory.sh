@@ -1,10 +1,10 @@
 #!/bin/bash
 
-target_file=false
 quiet_mode=false
 verbose=false
+target_file=""
 
-while getopts ":qtd:" opt; do
+while getopts ":qvt:" opt; do
   case $opt in
     q)
       quiet_mode=true
@@ -32,7 +32,7 @@ if $verbose; then
 fi
 arp_output=$(arp -a | grep -v incomplete)
 
-inventory_file="/tmp/k8s_inventory"
+inventory_file="/tmp/k8s_inventory.ini"
 
 controlplane_nodes=()
 controlplane_node_ips=()
@@ -120,7 +120,7 @@ if ! $quiet_mode; then
     cat "$inventory_file"
 fi
 
-if $target_file; then
+if [ -n "${target_file}" ]; then
     cp "$inventory_file" "$target_file"
     if $verbose; then
         echo "Created inventory file at $target_file"
