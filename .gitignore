@@ -124,3 +124,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 cdk.out
+
+inventory/*
+!inventory/example.ini
