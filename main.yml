@@ -72,13 +72,9 @@
       ansible.builtin.include_role:
         name: geerlingguy.security
 
-- name: Install and Configure Kubernetes Cluster
-  hosts: localhost
+- name: Install Kubernetes Cluster with kubespray submodule
   become: true
-  gather_facts: true
-  tasks:
-    - name: Import kubespray playbook
-      ansible.builtin.import_playbook: ./kubespray/cluster.yml
+  ansible.builtin.import_playbook: kubespray/cluster.yml
 
 - name: Install and Configure kubectl
   hosts: localhost
