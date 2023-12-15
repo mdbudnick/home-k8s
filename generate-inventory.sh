@@ -59,7 +59,6 @@ while read -r entry; do
         node="controlplane-$controlplane_counter"
         controlplane_nodes+=("$node")
         controlplane_node_ips+=("$ip")
-        etcd_nodes+=("$node")
         ((controlplane_counter++))
     fi
 
@@ -120,11 +119,6 @@ echo "[kube_node]" >> "$inventory_file"
 for n in ${workernodes[@]}; do
     echo "$n" >> "$inventory_file"
 done
-
-# This is to skip the 'Check dummy module' preinstall check (does not work on raspberry pi os)
-echo "" >> "$inventory_file"
-echo "[kube_node:vars]" >> "$inventory_file"
-echo "enable_nodelocaldns=false"  >> "$inventory_file"
 
 echo "" >> "$inventory_file"
 echo "[k8s_cluster:children]" >> "$inventory_file"
