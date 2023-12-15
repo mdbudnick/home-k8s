@@ -36,11 +36,12 @@ inventory_file="/tmp/k8s_inventory.ini"
 
 controlplane_nodes=()
 controlplane_node_ips=()
-controlplane_counter=0
+controlplane_counter=1
 workernodes=()
 workernode_ips=()
-workernode_counter=0
+workernode_counter=1
 etcd_nodes=()
+etcd_counter=1
 
 kube_ip_base="10.3.0."
 kube_ip=1
@@ -69,10 +70,14 @@ while read -r entry; do
         node="workernode-$workernode_counter"
         workernodes+=("$node")
         workernode_ips+=("$ip")
-        if [[ $hostname =~ etcd ]]; then
-            etcd_nodes+=("$node")
-        fi
         ((workernode_counter++))
+    fi
+    
+    if [[ $hostname =~ etcd ]]; then
+        if $verbose; then
+            echo "Adding $hostname as etcd node"
+        fi
+        etcd_nodes+=("$node")
     fi
 done <<< "$arp_output"
 
@@ -80,13 +85,21 @@ done <<< "$arp_output"
 
 # Add ansible hosts
 for i in ${!controlplane_nodes[@]}; do
-    echo "${controlplane_nodes[$i]} ansible_host=${controlplane_node_ips[$i]} ip=$kube_ip_base$kube_ip" >> "$inventory_file"
-    ((kube_ip++))
+    host="${controlplane_nodes[$i]} ansible_host=${controlplane_node_ips[$i]}" 
+    if [[ " ${etcd_nodes[@]} " =~ " ${controlplane_nodes[$i]} " ]]; then
+        host+=" etcd_member_name=etcd$etcd_counter"
+        (( etcd_counter++ ))
+    fi
+    echo "$host" >> "$inventory_file"
 done
 
 for i in ${!workernodes[@]}; do
-    echo "${workernodes[$i]} ansible_host=${workernode_ips[$i]} ip=$kube_ip_base$kube_ip" >> "$inventory_file"
-    ((kube_ip++))
+    host="${workernodes[$i]} ansible_host=${workernode_ips[$i]}"
+    if [[ " ${etcd_nodes[@]} " =~ " ${workernodes[$i]} " ]]; then
+        host+=" etcd_member_name=etcd$etcd_counter"
+        (( etcd_counter++ ))
+    fi
+    echo "$host" >> "$inventory_file"
 done
 
 # Create ansible groups https://github.com/kubernetes-sigs/kubespray/blob/24632ae81beafbab9710718705d266536b1bf1ec/docs/ansible.md
@@ -108,9 +121,15 @@ for n in ${workernodes[@]}; do
     echo "$n" >> "$inventory_file"
 done
 
+# This is to skip the 'Check dummy module' preinstall check (does not work on raspberry pi os)
 echo "" >> "$inventory_file"
-echo "[k8s-cluster:children]" >> "$inventory_file"
-echo "kube_control_plane, kube_node" >> "$inventory_file"
+echo "[kube_node:vars]" >> "$inventory_file"
+echo "enable_nodelocaldns=false"  >> "$inventory_file"
+
+echo "" >> "$inventory_file"
+echo "[k8s_cluster:children]" >> "$inventory_file"
+echo "kube_control_plane" >> "$inventory_file"
+echo "kube_node" >> "$inventory_file"
 
 if $verbose; then
     echo "Generated inventory file:"
