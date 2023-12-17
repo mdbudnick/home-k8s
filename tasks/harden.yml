@@ -1,0 +1,12 @@
+---
+- name: Update, upgrade and secure nodes
+  hosts: k8s_cluster
+  become: true
+  gather_facts: true
+  tasks:
+  - name: apt update && apt upgrade
+    ansible.builtin.apt:
+      update_cache: true
+      upgrade: true
+  roles: 
+    - geerlingguy.security

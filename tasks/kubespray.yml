@@ -1,0 +1,4 @@
+---
+- name: Install Kubernetes Cluster with kubespray submodule``
+  become: true
+  ansible.builtin.import_playbook: kubespray/cluster.yml

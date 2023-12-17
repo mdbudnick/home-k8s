@@ -1,0 +1,86 @@
+---
+- name: Install and Configure kubectl
+  hosts: localhost
+  gather_facts: yes
+  vars:
+  - kubectl_version: v1.27.7 # Match with kubespray/roles/kubespray-defaults/defaults/main.yaml kube_version
+  tasks:
+    - name: Determine OS and architecture
+      ansible.builtin.set_fact:
+        os: "{{ ansible_facts['os_family'] }}"
+        architecture: "{{ ansible_facts['architecture'] }}"
+
+    - name: Download and install kubectl for Linux
+      become: true
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+        dest: "/usr/local/bin/"
+        mode: "0411"
+      when: os == "Debian" and architecture == "x86_64"
+
+    - name: Download and install kubectl for macOS on Intel chip
+      become: true
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/darwin/amd64/kubectl"
+        dest: "/usr/local/bin/"
+        mode: "0411"
+      when: os == "Darwin" and architecture == "x86_64"
+
+    - name: Download and install kubectl for macOS on Apple silicon
+      become: true
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/darwin/arm64/kubectl"
+        dest: "/usr/local/bin/"
+        mode: "0411"
+      when: os == "Darwin" and architecture == "arm64"
+
+- name: Copy Kubernetes admin.conf
+  hosts: localhost
+  become: false
+  vars:
+    user: mb
+    conf_file_dest: ~/.kube/kubespray-cluster.conf
+
+  tasks:
+    - name: Create ~/.kube directory
+      file:
+        path: ~/.kube
+        state: directory
+    
+    - name: Check if ~/.kube/admin.conf exists
+      stat:
+        path: ~/.kube/admin.conf
+      register: kube_admin_conf_exists
+    
+    - name: Backup admin.conf on the local host
+      copy:
+        src: ~/.kube/admin.conf
+        dest: ~/.kube/admin.conf.bak
+        force: true
+      register: backup_result
+      when: kube_admin_conf_exists.stat.exists
+
+    - name: Fail the playbook if the backup command fails
+      fail:
+        msg: "Failed to create a backup of admin.conf on the local host"
+      when: 
+        - kube_admin_conf_exists.stat.exists and backup_result.changed
+
+    - name: Get the IP address of kube_control_plane
+      set_fact:
+        kube_control_plane_ip: "{{ hostvars[groups['kube_control_plane'][0]].ansible_host }}"
+
+    - name: Copy admin.conf from control_plane to local
+      command: "scp {{ user }}@{{ kube_control_plane_ip }}:/tmp/admin.conf {{ conf_file_dest }}"
+      register: scp_result
+
+    - name: Set permissions on /tmp/config
+      file:
+        path: {{ conf_file_dest }}
+        mode: '0644'
+      when: scp_result.changed
+
+    - name: Validate kubectl configuration
+      ansible.builtin.command: "kubectl version --client && kubectl get nodes"
+      delegate_to: localhost
+      changed_when: false
