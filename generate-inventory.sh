@@ -109,6 +109,10 @@ for n in ${controlplane_nodes[@]}; do
 done
 
 echo "" >> "$inventory_file"
+echo "[kube_node:vars]" >> "$inventory_file"
+echo "host_architecture="amd64""
+
+echo "" >> "$inventory_file"
 echo "[etcd]" >> "$inventory_file"
 for n in ${etcd_nodes[@]}; do
     echo "$n" >> "$inventory_file"
@@ -119,6 +123,11 @@ echo "[kube_node]" >> "$inventory_file"
 for n in ${workernodes[@]}; do
     echo "$n" >> "$inventory_file"
 done
+
+echo "" >> "$inventory_file"
+echo "[kube_node:vars]" >> "$inventory_file"
+echo "host_architecture="arm64""
+
 
 echo "" >> "$inventory_file"
 echo "[k8s_cluster:children]" >> "$inventory_file"
