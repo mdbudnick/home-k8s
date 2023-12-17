@@ -1,0 +1,9 @@
+---
+- name: Update and harden nodes
+  import_playbook: harden.yml
+
+- name: Install kubernetes on nodes with kubespray
+  import_playbook: ../kubespray/cluster.yml
+
+- name: Install kubectl on localhost and add config from new cluster
+  import_playbook: kubectl.yml
