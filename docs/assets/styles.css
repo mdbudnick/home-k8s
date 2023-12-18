@@ -2,6 +2,7 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
+    color: #001f3f; /* Deep Navy Blue */
 }
 
 #banner img {
@@ -11,10 +12,6 @@ body {
 
 section {
     margin: 20px;
-}
-
-h2 {
-    color: #333;
 }
 
 #overview {
@@ -38,7 +35,6 @@ h2 {
 
 .highlight {
     font-size: 1.2em;
-    color: #001f3f; /* Deep Navy Blue */
     font-weight: bold;
 }
 
@@ -71,10 +67,29 @@ h2 {
     width: 100%;
 }
 
-.component-item img {
-    width: 40%;
-    height: 100%;
-    object-fit: cover;
+#3d-printed-components {
+    margin: 0 5%;
+}
+
+#3d-printed-components h2 {
+    width: 100%;
+}
+
+.printed-component-item {
+    flex-basis: calc(50% - 10px);
+    margin-bottom: 20px;
+    box-sizing: border-box;
+}
+
+.printed-component-content {
+    display: flex;
+    width: 100%;
+}
+
+.printed-component-item img {
+    width: 30%;
+    height: 275px;
+    object-fit: contain;
     margin-right: 10px;
 }
 
