@@ -1,1 +1,94 @@
-Hello World
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Kubernetes Cluster</title>
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <section id="banner">
+        <img src="assets/cluster.jpg" alt="Cluster Banner">
+    </section>
+<section id="overview">
+    <div class="overview-item">
+        <h2>High Availability Cluster</h2>
+        <p>
+            A High-Availability (HA) Kubernetes cluster ensures continuous operation and reliability. It is designed to minimize downtime, enhance fault tolerance, and provide seamless failover in the event of hardware or software failures. This setup is crucial for maintaining the availability of applications and services hosted on the cluster.<br>
+        </p>
+        <h3>High Availability Cluster Requirements</h3>
+        <ul id="highlights">
+            <li><span class="highlight">Redundant Control Plane:</span> Two Dell Wyse 5070s act as the control plane, ensuring redundancy and fault tolerance.</li>
+            <li><span class="highlight">Node Failover:</span> Worker nodes, including a Raspberry Pi 5, 3 Model B, and 3 Model B+, support automatic failover for running applications.</li>
+            <li><span class="highlight">Power Backup:</span> The CyberPower ST425 Standby UPS System guarantees power continuity, preventing disruptions due to power outages.</li>
+            <li><span class="highlight">Network Reliability:</span> Powering my modem with the battery backup and using a battle-hardened platform like the TP-Link 8 Port Gigabit Switch plays a crucial role in maintaining network reliability, providing a stable and efficient communication backbone within the cluster. Ideally, there would be network redundancy, but since this is being run at home the expense would not be worth the benefit</li>
+            <li><span class="highlight">Container Orchestration:</span> Utilizing Kubernetes for container orchestration, allowing dynamic scaling and efficient resource utilization.</li>
+            <li><span class="highlight">Security Measures:</span> Implementing security best practices to safeguard against unauthorized access and potential threats. This has been achieved by updating all of the packages in the node, and implementing the <a href="https://galaxy.ansible.com/ui/standalone/roles/geerlingguy/security/" target="_blank">geerlingguy.security</a> role on each node.</li>
+            <li><span class="highlight">Monitoring and Alerts:</span> Implementing monitoring tools to track cluster health and receive alerts in case of abnormalities. This is currently a work in progress.</li>
+            <li><span class="highlight">Regular Backups:</span> Periodic backups of critical data and configurations to facilitate recovery in case of data loss or corruption. This is currently a work in progress.</li>
+        </ul>
+    </div>
+    </section>
+
+    <section id="components">
+        <h2>Cluster Components</h2>
+        <div class="component-item">
+            <div class="component-content">
+                <img src="assets/wyse-5070.jpg" alt="Control Plane Nodes">
+                <div class="text-content">
+                    <h2>Control Plane Nodes</h2>
+                    <p>
+                        The control plane is hosted by two Dell Wyse 5070s, serving as the brain of the Kubernetes cluster. They are very reliable thin client workstation PCs, with many ports, 4K dual-monitor output, and have a solid compact form. They are moderately powerful, especially for the price since they go for about $30 on EBay. I've also upgraded one with a 500GB SSD and 16GB RAM(8 x 2), and the other with a 250GB SSD and added the RAM I had replaced in the first, doubling its memory to 8GB.
+                    </p>
+                    <a href="https://www.dell.com/support/manuals/en-us/wyse-5070-thin-client/5070_std_ug/technical-specifications" target="_blank">Technical Specifications</a><br>
+                    <a href="https://www.amazon.com/gp/product/B08B3CT3XQ" target="_blank">80mm Fans </a>(see banner photo)
+                </div>
+            </div>
+        </div>
+
+        <div class="component-item">
+            <div class="component-content">
+                <img src="assets/raspberry-pi.jpg" alt="Raspberry Pi Board">
+                <div class="text-content">
+                    <h2>Worker Nodes</h2>
+                    <p>
+                        The worker nodes consist of a Raspberry Pi 5, Raspberry Pi 3 Model B, and Raspberry Pi 3 Model B+. I finally received the Raspberry Pi 5 (2 of them, actually) and decided to use one in this cluster. The 3s are both ones that I had purchased in the past and reused for this project.
+                    </p>
+                    <a href="https://www.raspberrypi.com/products/raspberry-pi-5/" target="_blank">Raspberry Pi 5</a><br>
+                    <a href="https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/" target="_blank">Raspberry Pi 3 B+</a><br>
+                    <a href="https://www.raspberrypi.com/products/raspberry-pi-3-model-b/" target="_blank">Raspberry Pi 3 B</a><br>
+                    <a href="https://www.amazon.com/dp/B0792BW2VH" target="_blank">30mm Fans</a><br>
+                </div>
+            </div>
+        </div>
+
+        <div class="component-item">
+            <div class="component-content">
+                <img src="assets/network-switch.jpg" alt="Network Switch">
+                <div class="text-content">
+                    <h2>Network Switch</h2>
+                    <p>
+                        The TP-Link 8 Port Gigabit Switch forms the backbone of the cluster's network infrastructure (after the router). With a Cat8 cable going to my router and flat Cat 6s (easier to manage than round) going to each node, it is ensuring efficient data transfer within the cluster. It comes from a reputable company with rave reviews. It was simply plug and play for me, and I have WiFi as "redundancy".
+                    </p>
+                    <a href="https://www.amazon.com/gp/product/B00K4DS5KU/" target="_blank">TP-Link 8 Port Gigabit Switch</a><br>
+                    <a href="https://www.amazon.com/dp/B086BY9882" target="_blank">Flat Cat6 Cables</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="component-item">
+            <div class="component-content">
+                <img src="assets/power-supply.jpg" alt="Power Supply">
+                <div class="text-content">
+                    <h2>Power Supply</h2>
+                    <p>
+                        The CyberPower ST425 Standby UPS System (425VA/260W) powers the entire cluster, including the router, and safeguards it against both power outages and surges. Unexpected power disruptions are not something many people consider, especially in a big city like New York, but they do happen, <a href="https://abc7ny.com/power-outage-nyc-con-edison-electrical/14187118/" target="_blank">like when I was setting up this cluster</a> and the power supply worked as expected.
+                    </p>
+                    <a href="https://www.amazon.com/CyberPower-ST425-Standby-Outlets-Compact/dp/B07GZR981Y/" target="_blank">Check it out</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>

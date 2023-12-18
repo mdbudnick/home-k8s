@@ -1,0 +1,105 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+#banner img {
+    width: 100%;
+    height: auto;
+}
+
+section {
+    margin: 20px;
+}
+
+h2 {
+    color: #333;
+}
+
+#overview {
+    margin: 0 5%;
+}
+
+#overview li {
+    margin-bottom: 15px;
+}
+
+.overview-item {
+    flex-basis: 100%;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+}
+
+#highlights {
+    list-style-type: none;
+    margin-bottom: 10px;
+}
+
+.highlight {
+    font-size: 1.2em;
+    color: #001f3f; /* Deep Navy Blue */
+    font-weight: bold;
+}
+
+#components {
+    margin: 0 5%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+#components h2 {
+    width: 100%;
+}
+
+.component-item {
+    flex-basis: calc(50% - 10px);
+    margin-bottom: 20px;
+    box-sizing: border-box;
+}
+
+.component-item img {
+    width: 100%;
+    height: auto;
+    object-fit: contain; /* Adjust to 'cover' if you prefer a different scaling */
+    margin-right: 10px;
+}
+
+.component-content {
+    display: flex;
+    width: 100%;
+}
+
+.component-item img {
+    width: 40%;
+    height: 100%;
+    object-fit: cover;
+    margin-right: 10px;
+}
+
+.text-content {
+    flex-basis: 60%;
+}
+
+.text-content h2 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
+.text-content p,
+.text-content a {
+    margin-bottom: 10px;
+    color: #333;
+    text-decoration: none;
+}
+
+.text-content a {
+    color: #007bff;
+    border-bottom: 1px solid transparent;
+    transition: border-bottom 0.3s ease;
+}
+
+.text-content a:hover {
+    border-bottom: 2px solid #007bff;
+}
