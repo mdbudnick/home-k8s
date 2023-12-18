@@ -3,7 +3,9 @@
 ## Overview
 After setting up nodes on your local network with the proper host naming schema, and generating a inventory file, the tasks/main.yml ansible playbook can be run to install Kubernetes on a home cluster automatically. This setup will update the node packages and add a best practice security role, before installing a Kubernetes cluster on them along with kubectl on the localhost where the playbook is run. With a little bit of setup and a couple of commands you have your own kubernetes cluster, voila!
 
-This repo was tested on a cluster with AMD64 Control Planes and Arm64 (Raspberry Pi) Worker nodes, please see the project website for more detailed information.
+## Personal Kubernetes Cluster Details
+This repo was tested by deploying a cluster with AMD64 Control Planes and Arm64 (Raspberry Pi) Worker nodes, please see the project website for more detailed information.
+### [Project Website](https://mdbudnick.github.io/home-k8s/)
 
 ## Usage
 1. Prepare a cluster with the proper naming schema, see [Host Naming Schema](#Host Naming Schema) below
