@@ -4,6 +4,8 @@ quiet_mode=false
 verbose=false
 target_file=""
 
+network_ip_base='10.109.89.*'
+
 while getopts ":qvt:" opt; do
   case $opt in
     q)
@@ -25,7 +27,7 @@ done
 if $verbose; then
     echo "Running nmap to discover network devices"
 fi
-nmap_output=$(nmap -sn '10.109.89.*' | grep 'Nmap scan report for' | awk '{print $5}')
+nmap_output=$(nmap -sn $network_ip_base | grep 'Nmap scan report for' | awk '{print $5}')
 
 if $verbose; then
     echo "Collecting device details with arp - a"
@@ -42,9 +44,6 @@ workernode_ips=()
 workernode_counter=1
 etcd_nodes=()
 etcd_counter=1
-
-kube_ip_base="10.3.0."
-kube_ip=1
 
 # Process arp_output and generate array entries
 while read -r entry; do
