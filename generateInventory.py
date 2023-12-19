@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
 import argparse
 import subprocess
+import json
+
+from ansible.parsing.dataloader import DataLoader
+try:
+    from ansible.inventory.manager import InventoryManager
+    A24 = True
+except ImportError:
+    from ansible.vars import VariableManager
+    from ansible.inventory import Inventory
+    A24 = False
 
 def run_nmap(ip, verbose):
     try:
@@ -18,6 +28,7 @@ def parse_args():
     parser.add_argument('-q', '--quiet', action='store_true', help='Quiet mode (do not output result)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose mode (stdout for debugging)')
     parser.add_argument('-t', '--target-file', metavar='TARGET_FILE', type=str, help='Save result to the specified file')
+    parser.add_argument('-o', '--output', default='json', choices=['ini', 'json'], type=str, help='Output format (ini or json)')
     return parser.parse_args()
 
 def get_cpu_architecture(hostname):
@@ -28,7 +39,34 @@ def get_cpu_architecture(hostname):
             elif 'arm64' in hostname:
                 return "arm64"
 
-            return None              
+            return None
+
+# Adapted from https://gist.githubusercontent.com/sivel/3c0745243787b9899486/raw/6826fbbbb70fe66201d0d6785fbe4070ce73d926/inventory2json.py
+def convert_inventory_to_json(inventory_file):
+    loader = DataLoader()
+    if A24:
+        inventory = InventoryManager(loader, [inventory_file])
+        inventory.parse_sources()
+    else:
+        variable_manager = VariableManager()
+        inventory = Inventory(loader, variable_manager, inventory_file)
+        inventory.parse_inventory(inventory.host_list)
+
+    out = {'_meta': {'hostvars': {}}}
+    for group in inventory.groups.values():
+        out[group.name] = {
+            'hosts': [h.name for h in group.hosts],
+            'vars': group.vars,
+            'children': [c.name for c in group.child_groups]
+        }
+    for host in inventory.get_hosts():
+        # Added unnecessarily by library
+        del host.vars['inventory_file']
+        del host.vars['inventory_dir']
+
+        out['_meta']['hostvars'][host.name] = host.vars
+
+    return json.dumps(out, indent=4, sort_keys=True)
 
 def main():
     args = parse_args()
@@ -85,7 +123,6 @@ def main():
 
     with open(inventory_file, 'w') as file:
         for node in controlplane_nodes + worker_nodes:
-            print(node)
             host = f"{node['name']} ansible_host={node['ip']}"
             if "etcd_member_name" in node:
                 host += f" etcd_member_name={node['etcd_member_name']}"
@@ -108,6 +145,14 @@ def main():
 
         file.write("\n[k8s_cluster:children]\n")
         file.write("kube_control_plane\nkube_node\n")
+
+    if args.output == "json":
+        if args.verbose:
+            print("Converting to json output")
+        json_inventory = convert_inventory_to_json(inventory_file)
+        # print(json_inventory)
+        with open(inventory_file, 'w') as file:
+            file.write(json_inventory)
 
     if args.verbose:
         print("Generated inventory file:\n")
