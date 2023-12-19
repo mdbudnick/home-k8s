@@ -25,6 +25,8 @@ This repository was tested by deploying a cluster with AMD64 Control Planes and 
    ```
 6. Watch as your Ansible cluster is automatically configured 
 
+Please note, you will have to set your kubectl to use the new config file (~/.kube/homek8s_cluster.conf by default) to interact with the new cluster. This can be done with the KUBECONFIG environmental variable or the --kubeconfig parameter.
+
 ### Caveats
 One of the major caveats with this is that you will need to use the same sudo password for all of the machines, including the host it is run on. This is a limitation of Ansible and discussion is outside the scope of this manual.
 
