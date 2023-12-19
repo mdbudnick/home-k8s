@@ -28,29 +28,22 @@ while [[ $# -gt 0 ]]; do
       fi
       shift
       ;;
-    *)
-      usage
-      ;;
-  esac
-done
-
-while getopts ":qvt:h" opt; do
-  case $opt in
-    q)
+    -q)
       quiet_mode=true
       ;;
-    v)
+    -v)
       verbose=true
       ;;
-    t)
-      target_file="$OPTARG"
+    -t)
+      shift
+      target_file="$1"
+      shift
       ;;
-    h)
+    -h|--help)
       usage
       ;;
-    \?)
-      echo "Invalid option: -$OPTARG" >&2
-      exit 1
+    *)
+      usage
       ;;
   esac
 done
