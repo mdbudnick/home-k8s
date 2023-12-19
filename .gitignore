@@ -127,3 +127,4 @@ cdk.out
 
 inventory/*
 !inventory/example.ini
+roles/geerlingguy.security/*
