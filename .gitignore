@@ -126,5 +126,5 @@ dist
 cdk.out
 
 inventory/*
-!inventory/example.ini
+!inventory/example.*
 roles/geerlingguy.security/*

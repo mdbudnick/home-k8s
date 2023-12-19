@@ -1,0 +1,72 @@
+{
+    "_meta": {
+        "hostvars": {
+            "controlplane-1": {
+                "ansible_host": "192.168.0.1",
+                "etcd_member_name": "etcd1"
+            },
+            "controlplane-2": {
+                "ansible_host": "192.168.0.2",
+                "etcd_member_name": "etcd2"
+            },
+            "workernode-1": {
+                "ansible_host": "192.168.0.3",
+                "etcd_member_name": "etcd3"
+            },
+            "workernode-2": {
+                "ansible_host": "192.168.0.4"
+            },
+            "workernode-3": {
+                "ansible_host": "192.168.0.5"
+            }
+        }
+    },
+    "all": {
+        "children": [
+            "ungrouped",
+            "etcd",
+            "k8s_cluster"
+        ],
+        "hosts": [],
+        "vars": {}
+    },
+    "etcd": {
+        "children": [],
+        "hosts": [
+            "controlplane-1",
+            "controlplane-2",
+            "workernode-1"
+        ],
+        "vars": {}
+    },
+    "k8s_cluster": {
+        "children": [
+            "kube_control_plane",
+            "kube_node"
+        ],
+        "hosts": [],
+        "vars": {}
+    },
+    "kube_control_plane": {
+        "children": [],
+        "hosts": [
+            "controlplane-1",
+            "controlplane-2"
+        ],
+        "vars": {}
+    },
+    "kube_node": {
+        "children": [],
+        "hosts": [
+            "workernode-1",
+            "workernode-2",
+            "workernode-3"
+        ],
+        "vars": {}
+    },
+    "ungrouped": {
+        "children": [],
+        "hosts": [],
+        "vars": {}
+    }
+}
