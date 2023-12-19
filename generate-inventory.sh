@@ -16,6 +16,9 @@ usage() {
   exit 1
 }
 
+echo "This script is deprecated and left here for reference, please use generate_inventory.py"
+exit 1
+
 # Parse command line options
 while [[ $# -gt 0 ]]; do
   case "$1" in
