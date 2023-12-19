@@ -3,8 +3,25 @@
 quiet_mode=false
 verbose=false
 target_file=""
+network_ips=()
 
-network_ip_base='10.109.89.*'
+# Parse command line options
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -n|--ips)
+      shift
+      if [ -n "$1" ]; then
+        IFS=',' read -ra network_ips <<< "$1"
+      else
+        usage
+      fi
+      shift
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
 
 while getopts ":qvt:" opt; do
   case $opt in
@@ -25,9 +42,15 @@ while getopts ":qvt:" opt; do
 done
 
 if $verbose; then
-    echo "Running nmap to discover network devices"
+    echo "Running nmap to discover network devices for $network_ips"
 fi
-nmap_output=$(nmap -sn $network_ip_base | grep 'Nmap scan report for' | awk '{print $5}')
+for ip in "${network_ips[@]}"; do
+  nmap_output=$(nmap -sn "$ip" | grep 'Nmap scan report for' | awk '{print $5}')
+  if $verbose; then
+    echo "Scan report for $ip:"
+    echo "$nmap_output"
+  fi
+done
 
 if $verbose; then
     echo "Collecting device details with arp - a"
