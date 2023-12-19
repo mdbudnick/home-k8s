@@ -61,9 +61,11 @@ inventory_file="/tmp/k8s_inventory.ini"
 
 controlplane_nodes=()
 controlplane_node_ips=()
+controlplane_architectures=()
 controlplane_counter=1
 workernodes=()
 workernode_ips=()
+workernode_architectures=()
 workernode_counter=1
 etcd_nodes=()
 etcd_counter=1
@@ -82,6 +84,16 @@ while read -r entry; do
         controlplane_nodes+=("$node")
         controlplane_node_ips+=("$ip")
         ((controlplane_counter++))
+        
+        if [[ $hostname =~ amd64 ]]; then
+        controlplane_architectures+=("amd64")
+        elif [[ $hostname =~ arm ]]; then
+        controlplane_architectures+=("arm")
+        elif [[ $hostname =~ arm64 ]]; then
+        controlplane_architectures+=("arm64")
+        else
+        controlplane_architectures+=("")
+        fi
     fi
 
     if [[ $hostname =~ k8sw ]]; then
@@ -92,6 +104,16 @@ while read -r entry; do
         workernodes+=("$node")
         workernode_ips+=("$ip")
         ((workernode_counter++))
+
+        if [[ $hostname =~ amd64 ]]; then
+        workernode_architectures+=("amd64")
+        elif [[ $hostname =~ arm ]]; then
+        workernode_architectures+=("arm")
+        elif [[ $hostname =~ arm64 ]]; then
+        workernode_architectures+=("arm64")
+        else
+        workernode_architectures+=("")
+        fi
     fi
     
     if [[ $hostname =~ etcd ]]; then
@@ -111,6 +133,9 @@ for i in ${!controlplane_nodes[@]}; do
         host+=" etcd_member_name=etcd$etcd_counter"
         (( etcd_counter++ ))
     fi
+    if [[ "${controlplane_architectures[$i]}" ]]; then
+        host+=" host_architecture=${controlplane_architectures[$i]}"
+    fi
     echo "$host" >> "$inventory_file"
 done
 
@@ -119,6 +144,9 @@ for i in ${!workernodes[@]}; do
     if [[ " ${etcd_nodes[@]} " =~ " ${workernodes[$i]} " ]]; then
         host+=" etcd_member_name=etcd$etcd_counter"
         (( etcd_counter++ ))
+    fi
+    if [[ "${workernode_architectures[$i]}" ]]; then
+        host+=" host_architecture=${workernode_architectures[$i]}"
     fi
     echo "$host" >> "$inventory_file"
 done
@@ -131,10 +159,6 @@ for n in ${controlplane_nodes[@]}; do
 done
 
 echo "" >> "$inventory_file"
-echo "[kube_node:vars]" >> "$inventory_file"
-echo "host_architecture="amd64""
-
-echo "" >> "$inventory_file"
 echo "[etcd]" >> "$inventory_file"
 for n in ${etcd_nodes[@]}; do
     echo "$n" >> "$inventory_file"
@@ -145,11 +169,6 @@ echo "[kube_node]" >> "$inventory_file"
 for n in ${workernodes[@]}; do
     echo "$n" >> "$inventory_file"
 done
-
-echo "" >> "$inventory_file"
-echo "[kube_node:vars]" >> "$inventory_file"
-echo "host_architecture="arm64""
-
 
 echo "" >> "$inventory_file"
 echo "[k8s_cluster:children]" >> "$inventory_file"
