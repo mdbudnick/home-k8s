@@ -1,9 +1,9 @@
 ---
 - name: Install and Configure kubectl
   hosts: localhost
-  gather_facts: yes
+  gather_facts: false
   vars:
-  - kubectl_version: v1.27.7 # Match with kubespray/roles/kubespray-defaults/defaults/main.yaml kube_version
+    - kubectl_version: v1.27.7 # Match with kubespray/roles/kubespray-defaults/defaults/main.yaml kube_version
   tasks:
     - name: Determine OS and architecture
       ansible.builtin.set_fact:
@@ -39,32 +39,32 @@
   become: false
   vars:
     user: mb
-    conf_file_dest: ~/.kube/kubespray-cluster.conf
+    conf_file_dest: ~/.kube/home-k8s-cluster.conf
 
   tasks:
     - name: Create ~/.kube directory
       file:
         path: ~/.kube
         state: directory
-    
-    - name: Check if ~/.kube/admin.conf exists
+
+    - name: Check if ~/.kube/home-k8s-cluster.conf exists
       stat:
-        path: ~/.kube/admin.conf
-      register: kube_admin_conf_exists
-    
+        path: ~/.kube/home-k8s-cluster.conf
+      register: home_k8s_cluster_conf
+
     - name: Backup admin.conf on the local host
       copy:
-        src: ~/.kube/admin.conf
-        dest: ~/.kube/admin.conf.bak
+        src: ~/.kube/home-k8s-cluster.conf
+        dest: ~/.kube/home-k8s-cluster.conf.bak
         force: true
       register: backup_result
-      when: kube_admin_conf_exists.stat.exists
+      when: home_k8s_cluster.stat.exists
 
     - name: Fail the playbook if the backup command fails
       fail:
-        msg: "Failed to create a backup of admin.conf on the local host"
-      when: 
-        - kube_admin_conf_exists.stat.exists and backup_result.changed
+        msg: "Failed to create a backup of home_k8s_cluster.conf on the local host"
+      when:
+        - home_k8s_cluster_conf.stat.exists and backup_result.changed
 
     - name: Get the IP address of kube_control_plane
       set_fact:
@@ -74,13 +74,8 @@
       command: "scp {{ user }}@{{ kube_control_plane_ip }}:/tmp/admin.conf {{ conf_file_dest }}"
       register: scp_result
 
-    - name: Set permissions on /tmp/config
+    - name: Set permissions on copied conf file
       file:
         path: "{{ conf_file_dest }}"
         mode: '0644'
       when: scp_result.changed
-
-    - name: Validate kubectl configuration
-      ansible.builtin.command: "kubectl version --client && kubectl get nodes"
-      delegate_to: localhost
-      changed_when: false
