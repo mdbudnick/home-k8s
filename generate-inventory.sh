@@ -5,6 +5,17 @@ verbose=false
 target_file=""
 network_ips=()
 
+usage() {
+  echo "Usage: $0 [options]"
+  echo "Options:"
+  echo "  -n, --ips      Comma-separated list of IP addresses"
+  echo "  -q             Quiet mode (do not output result)"
+  echo "  -v             Verbose mode (stdout for debugging)"
+  echo "  -t             Save result to the specified file"
+  echo "  -h, --help     Display this help message"
+  exit 1
+}
+
 # Parse command line options
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -23,7 +34,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-while getopts ":qvt:" opt; do
+while getopts ":qvt:h" opt; do
   case $opt in
     q)
       quiet_mode=true
@@ -33,6 +44,9 @@ while getopts ":qvt:" opt; do
       ;;
     t)
       target_file="$OPTARG"
+      ;;
+    h)
+      usage
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
