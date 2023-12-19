@@ -5,20 +5,22 @@ body {
     color: #001f3f; /* Deep Navy Blue */
 }
 
-#banner img {
-    width: 100%;
-    height: auto;
+#banner {
+    position: relative;
+    width: 90%;
+    height: 30%;
+    margin: 5%;
 }
 
 section {
-    margin: 20px;
+    margin: 3% 5%;
 }
 
 #overview {
     margin: 0 5%;
 }
 
-#overview li {
+#considerations li {
     margin-bottom: 15px;
 }
 
@@ -33,20 +35,26 @@ section {
     margin-bottom: 10px;
 }
 
-.highlight {
+.highlight span {
     font-size: 1.2em;
     font-weight: bold;
 }
 
 #components {
     margin: 0 5%;
-    display: flex;
-    flex-wrap: wrap;
     justify-content: space-between;
 }
 
 #components h2 {
     width: 100%;
+}
+
+#component-items {
+    display: flexbox;
+    columns: 2;
+    @media screen and (max-width: 1000px) {
+        columns: 1;
+    }
 }
 
 .component-item {
@@ -56,7 +64,7 @@ section {
 }
 
 .component-item img {
-    width: 100%;
+    width: 30%;
     height: auto;
     object-fit: contain; /* Adjust to 'cover' if you prefer a different scaling */
     margin-right: 10px;
@@ -65,10 +73,6 @@ section {
 .component-content {
     display: flex;
     width: 100%;
-}
-
-#3d-printed-components {
-    margin: 0 5%;
 }
 
 #3d-printed-components h2 {
