@@ -2,6 +2,9 @@
 - name: Update and harden nodes
   import_playbook: harden.yml
 
+- name: Prepare machines with extra deps
+  import_playbook: prepare.yml
+
 - name: Install kubernetes on nodes with kubespray
   import_playbook: ../kubespray/cluster.yml
 

@@ -88,6 +88,7 @@ def main():
     controlplane_nodes = []
     worker_nodes = []
     etcd_nodes = []
+    pi_nodes = []
 
     for entry in arp_lines:
         hostname = entry.split()[0]
@@ -119,6 +120,11 @@ def main():
                 print(f"Adding {hostname} as etcd node")
             etcd_nodes.append(node["name"])
             node["etcd_member_name"] = f"etcd{len(etcd_nodes)}"
+        
+        if 'pi' in hostname:
+            if args.verbose:
+                print(f"Adding {hostname} as pi node")
+            pi_nodes.append(node["name"])
 
 
     with open(inventory_file, 'w') as file:
@@ -141,6 +147,10 @@ def main():
         
         file.write("\n[etcd]\n")
         for hostname in etcd_nodes:
+            file.write(hostname + '\n')
+        
+        file.write("\n[raspberry_pi]\n")
+        for hostname in pi_nodes:
             file.write(hostname + '\n')
 
         file.write("\n[k8s_cluster:children]\n")
