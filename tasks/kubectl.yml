@@ -40,6 +40,7 @@
   vars:
     user: mb
     conf_file_dest: ~/.kube/home-k8s-cluster.conf
+    context_name: home-k8s-cluster
 
   tasks:
     - name: Create ~/.kube directory
@@ -77,5 +78,35 @@
     - name: Set permissions on copied conf file
       file:
         path: "{{ conf_file_dest }}"
-        mode: '0644'
+        mode: "0644"
       when: scp_result.changed
+
+    - name: Replace IP in file
+      replace:
+        path: "{{ conf_file_dest }}"
+        regexp: '127\.0\.0\.1'
+        replace: "{{ kube_control_plane_ip }}"
+
+    - name: Replace kubectl context in file
+      blockinfile:
+        path: "{{ conf_file_dest }}"
+        marker: "{mark}"
+        marker_begin: "contexts:"
+        marker_end: "kind: Config"
+        block: |
+          - context:
+            name: {{ context_name }}
+              cluster: {{ context_name }}
+              user: kubernetes-admin
+              current-context: {{ context_name }}
+              server: https://{{ kube_control_plane_ip }}:6443
+        state: present
+        backup: true
+
+    - name: Print message for kubectl context
+      debug:
+        msg: >
+          To use your new cluster, set your `kubectl` context {{ context_name }}
+          to the one in your new config file at: {{ conf_file_dest }} with the
+          command:\n\nkubectl config use-context {{ context_name }}
+          --kubeconfig={{ conf_file_dest }}
