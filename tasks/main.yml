@@ -8,5 +8,8 @@
 - name: Install kubernetes on nodes with kubespray
   import_playbook: ../kubespray/cluster.yml
 
+- name: Install keepalived on control plane(s) for high-availability
+  import_playbook: kube_api_keepalived.yml
+
 - name: Install kubectl on localhost and add config from new cluster
   import_playbook: kubectl.yml
