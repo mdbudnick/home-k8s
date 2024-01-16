@@ -1,0 +1,29 @@
+---
+- name: Configure Keepalived for Kubernetes Control Plane
+  hosts: kubernetes_control_plane
+  become: true
+
+  tasks:
+    - name: Install Keepalived
+      apt:
+        name: keepalived
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install Keepalived
+      yum:
+        name: keepalived
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Configure Keepalived
+      template:
+        src: keepalived.conf.j2
+        dest: /etc/keepalived/keepalived.conf
+      notify: Restart Keepalived
+
+  handlers:
+    - name: Restart Keepalived
+      service:
+        name: keepalived
+        state: restarted
