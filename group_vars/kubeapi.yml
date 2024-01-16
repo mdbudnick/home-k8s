@@ -1,4 +1,4 @@
 ---
 conf_file_dest: ~/.kube/home-k8s-cluster.conf
 context_name: home-k8s-cluster
-kube_control_plane_virtual_ip: 10\.109\.89\.200
+kube_api_server_virtual_ip: 10\.109\.89\.200
